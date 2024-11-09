@@ -1,21 +1,23 @@
 const Redux = require('redux')
+const dateFns = require('date-fns')
+
 //função criadora de ação: ela cria novos contratos
-const criarContrato = (nome, taxa) => {
+const criarContrato = (data, nome, taxa) => {
   //ela devolve uma ação, ou seja, um objeto JS
   return {
     type: "CRIAR_CONTRATO",
     payload: {
-      nome, taxa
+      data, nome, taxa
     }
   }
 }
 //escrever a criadora de ação para cancelamento de contrato
 //2 minutos
-const cancelarContrato = (nome) => {
+const cancelarContrato = (data, nome) => {
   return {
     type: 'CANCELAR_CONTRATO',
     payload: {
-      nome
+      data, nome
     }
   }
 }
@@ -45,13 +47,20 @@ const caixa = (dinheiroEmCaixa = 0, acao) => {
   else if (acao.type === "CRIAR_CONTRATO") {
     dinheiroEmCaixa += acao.payload.taxa
   }
+  else if (acao.type === "CANCELAR_CONTRATO") {
+    //O resultado do formatDistance é uma string da forma '6 months', por isso pego apenas o primeiro número no índice 0
+    //espera-se que o date que vem da ação seja um objeto Date do date-fns
+    const duracaoContrato = dateFns.formatDistance(acao.payload.date, new Date())[0]
+    if(duracaoContrato <= 3)
+      dinheiroEmCaixa += 100
+  }
   return dinheiroEmCaixa
 }
 
 const contratos = (listaDeContratosAtual = [], acao) => {
   if (acao.type === "CRIAR_CONTRATO")
     return [...listaDeContratosAtual, acao.payload]
-  if (acao.type === "CANCELAR_CONTRATO")
+  if (acao.type === "CANCELAR_CONTRATO") 
     return listaDeContratosAtual.filter(c => c.nome !== acao.payload.nome)
   return listaDeContratosAtual
 }
